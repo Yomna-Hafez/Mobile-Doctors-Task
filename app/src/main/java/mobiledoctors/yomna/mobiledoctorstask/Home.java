@@ -54,10 +54,15 @@ public class Home extends FragmentActivity {
             public void onMyLocationChange(Location location) {
                 LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 16.0f));
+                map.addMarker(new MarkerOptions()
+                        .position(loc)
+                        .title("Hello Mobile Doctors!"));
+
             }
         };
         map.setOnMyLocationChangeListener(myLocationChangeListener);
     };
+
 
 
     private void initializeDrawer() {
