@@ -4,4 +4,19 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="facebook_app_id">1683110611976885</string>
+
+    <string-array name="placesCategoriesTitles">
+        <item >Resturant</item>
+        <item >Museum</item>
+        <item >School</item>
+        <item >Spa</item>
+    </string-array>
+
+
+    <array name="placesCategoriesIcons">
+        <item>@drawable/resturant</item>
+        <item>@drawable/museum</item>
+        <item>@drawable/school</item>
+        <item>@drawable/spa</item>
+    </array>
 </resources>

@@ -81,11 +81,9 @@ public class MainActivity extends Activity {
             }
         }
         return false;
-    }
+    };
 
-    ;
 
-    //Tapping the login button starts off a new Activity, which returns a result. To receive and handle the result, override the onActivityResult
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         callbackManager.onActivityResult(requestCode, resultCode, data);
@@ -109,10 +107,6 @@ public class MainActivity extends Activity {
                             Intent openHome = new Intent(MainActivity.this, Home.class);
                             startActivity(openHome);
                             finish();
-                            /*        Toast.makeText(getApplicationContext(), "Welcome " + response.getJSONObject().get("name").toString() +
-                        "\n" + response.getJSONObject().get("email").toString(),
-                Toast.LENGTH_LONG).show();*/
-
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
