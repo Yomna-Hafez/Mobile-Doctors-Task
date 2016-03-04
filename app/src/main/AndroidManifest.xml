@@ -55,13 +55,13 @@
             <!--android:name="com.google.android.maps.v2.API_KEY"-->
             <!--android:value="AIzaSyBfUJkGc3e3F_SYDA1HZy0Fga2zF0s6mwk" />-->
 
-        <!--<meta-data-->
-        <!--android:name="com.google.android.maps.v2.API_KEY"-->
-        <!--android:value="AIzaSyDYiSJt4SL8fl5MDv_AZjbj_FJMdl9BcQo" />-->
-
         <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCfJDlN8lXcLCh8H0f8G62ZQM0Qj9N0e9Y"/>
+        android:name="com.google.android.maps.v2.API_KEY"
+        android:value="AIzaSyBcY1YLFe4kMwiVUGPvlJR46_BdBiVjUV0" />
+
+        <!--<meta-data-->
+            <!--android:name="com.google.android.geo.API_KEY"-->
+            <!--android:value="AIzaSyCfJDlN8lXcLCh8H0f8G62ZQM0Qj9N0e9Y"/>-->
 
     </application>
 

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentActivity;
@@ -28,7 +29,11 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.JsonObject;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
 import com.squareup.picasso.Picasso;
+
 
 
 /**
@@ -68,7 +73,6 @@ public class Home extends FragmentActivity {
         };
         map.setOnMyLocationChangeListener(myLocationChangeListener);
 
-
 //        PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
 //        try {
 //            startActivityForResult(builder.build(getApplicationContext()), PLACE_PICKER_REQUEST);
@@ -77,6 +81,25 @@ public class Home extends FragmentActivity {
 //        } catch (GooglePlayServicesNotAvailableException e) {
 //            e.printStackTrace();
 //        }
+    }
+
+    ;
+
+    private void getNearbyPlaces() {
+
+        Ion.with(getApplicationContext())
+                .load("https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
+                        "location=-33.8670522,151.1957362&radius=500&type=restaurant" +
+                        "&key=AIzaSyCfJDlN8lXcLCh8H0f8G62ZQM0Qj9N0e9Y")
+                .asJsonObject()
+                .setCallback(new FutureCallback<JsonObject>() {
+                    @Override
+                    public void onCompleted(Exception e, JsonObject result) {
+                        Log.i("ION", result.toString());
+                        Toast.makeText(getApplicationContext(), "get nearby places response : "+ result.toString(),
+                Toast.LENGTH_LONG).show();
+                    }
+                });
     };
 
 
@@ -88,7 +111,9 @@ public class Home extends FragmentActivity {
 //                Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
             }
         }
-    };
+    }
+
+    ;
 
     private void initializeDrawer() {
 
@@ -104,7 +129,9 @@ public class Home extends FragmentActivity {
                 .placeholder(R.drawable.test1)
                 .error(R.drawable.test1)
                 .into(profilePicture);
-    };
+    }
+
+    ;
 
 
     @Override
