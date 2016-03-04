@@ -36,6 +36,8 @@ import com.squareup.picasso.Picasso;
  */
 public class Home extends FragmentActivity {
     private DrawerLayout mDrawer;
+    int PLACE_PICKER_REQUEST = 1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,25 +67,25 @@ public class Home extends FragmentActivity {
             }
         };
         map.setOnMyLocationChangeListener(myLocationChangeListener);
-        int PLACE_PICKER_REQUEST = 1;
-        PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
-        try {
-            startActivityForResult(builder.build(getApplicationContext()), PLACE_PICKER_REQUEST);
-        } catch (GooglePlayServicesRepairableException e) {
-            e.printStackTrace();
-        } catch (GooglePlayServicesNotAvailableException e) {
-            e.printStackTrace();
-        }
+
+
+//        PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+//        try {
+//            startActivityForResult(builder.build(getApplicationContext()), PLACE_PICKER_REQUEST);
+//        } catch (GooglePlayServicesRepairableException e) {
+//            e.printStackTrace();
+//        } catch (GooglePlayServicesNotAvailableException e) {
+//            e.printStackTrace();
+//        }
     };
 
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        int PLACE_PICKER_REQUEST = 1;
         if (requestCode == PLACE_PICKER_REQUEST) {
             if (resultCode == RESULT_OK) {
                 Place place = PlacePicker.getPlace(data, this);
-                String toastMsg = String.format("Place: %s", place.getName());
-                Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
+//                String toastMsg = String.format("Place: %s", place.getName());
+//                Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
             }
         }
     };
