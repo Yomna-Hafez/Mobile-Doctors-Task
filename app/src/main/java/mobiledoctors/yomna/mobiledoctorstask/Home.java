@@ -1,9 +1,13 @@
 package mobiledoctors.yomna.mobiledoctorstask;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.location.Location;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
@@ -19,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -47,6 +52,8 @@ public class Home extends FragmentActivity {
     private ListView listCategories;
     int PLACE_PICKER_REQUEST = 1;
     String currentLocation;
+    Double shortestDistance;
+    double currentLat, currentLng;
     GoogleMap map;
 
     @Override
@@ -61,6 +68,7 @@ public class Home extends FragmentActivity {
         initializeMap();
         initializeDrawerHeader();
         initializeDrawerList();
+        isGpsEnabled();
 
         listCategories.setOnItemClickListener(new OnItemClickListener() {
             @Override
@@ -81,6 +89,8 @@ public class Home extends FragmentActivity {
             @Override
             public void onMyLocationChange(Location location) {
                 LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
+                currentLat = location.getLatitude();
+                currentLng = location.getLongitude();
                 currentLocation = location.getLatitude() + "," + location.getLongitude();
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 16.0f));
                 map.addMarker(new MarkerOptions()
@@ -104,67 +114,107 @@ public class Home extends FragmentActivity {
     ;
 
     private void getNearbyPlaces(String category) {
+        if (isNetworkEnabled()) {
+            String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + currentLocation + "&radius=500&type=" + category + "&key=AIzaSyCfJDlN8lXcLCh8H0f8G62ZQM0Qj9N0e9Y";
+            Ion.with(getApplicationContext())
+                    .load(url)
+                    .asJsonObject()
+                    .setCallback(new FutureCallback<JsonObject>() {
+                        @Override
+                        public void onCompleted(Exception e, JsonObject result) {
+                            if (result != null) {
+                                map.clear();
+                                try {
+                                    String res = result.toString();
+                                    JSONObject resultObj = new JSONObject(res);
+                                    JSONArray data = resultObj.getJSONArray("results");
+                                    if (data.length() < 1) {
+                                        Toast.makeText(getApplicationContext(), "Sorry, no places here",
+                                                Toast.LENGTH_LONG).show();
+                                    } else {
+                                        for (int i = 0; i < data.length(); i++) {
+                                            JSONObject locationData = data.getJSONObject(i);
+                                            double lat = (double) locationData.getJSONObject("geometry").getJSONObject("location").get("lat");
+                                            double lng = (double) locationData.getJSONObject("geometry").getJSONObject("location").get("lng");
+                                            String name = locationData.get("name").toString();
+                                            drawNearbyPlaces(lat, lng, name);
+                                        }
 
-        String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + currentLocation + "&radius=500&type=" + category + "&key=AIzaSyCfJDlN8lXcLCh8H0f8G62ZQM0Qj9N0e9Y";
-        Ion.with(getApplicationContext())
-                .load(url)
-                .asJsonObject()
-                .setCallback(new FutureCallback<JsonObject>() {
-                    @Override
-                    public void onCompleted(Exception e, JsonObject result) {
-                        if (result != null) {
-                            map.clear();
-                            try {
-                                String res = result.toString();
-                                JSONObject resultObj = new JSONObject(res);
-                                JSONArray data = resultObj.getJSONArray("results");
-                                if (data.length() < 1) {
-                                    Toast.makeText(getApplicationContext(), "Sorry, no places here",
-                                            Toast.LENGTH_LONG).show();
-                                } else {
-                                    for (int i = 0; i < data.length(); i++) {
-                                        JSONObject locationData = data.getJSONObject(i);
-                                        double lat = (double) locationData.getJSONObject("geometry").getJSONObject("location").get("lat");
-                                        double lng = (double) locationData.getJSONObject("geometry").getJSONObject("location").get("lng");
-                                        String name = locationData.get("name").toString();
-                                        drawNearbyPlaces(new LatLng(lat, lng), name);
                                     }
-
+                                } catch (JSONException e1) {
+                                    e1.printStackTrace();
                                 }
-                            } catch (JSONException e1) {
-                                e1.printStackTrace();
                             }
                         }
-                    }
-                });
-    };
+                    });
+        }
+    }
+
+    ;
 
 
-    private void drawNearbyPlaces(LatLng loc, String placeName) {
-
+    private void drawNearbyPlaces(double destinationLat, double destinationLng, String placeName) {
+        LatLng loc = new LatLng(destinationLat, destinationLng);
         map.addMarker(new MarkerOptions()
                 .position(loc)
                 .title(placeName));
 
         // todo call find shortest route - bonus
-    };
+        // calculateDistance(currentLat, currentLng, destinationLat, destinationLng );
+    }
 
+    ;
+
+
+    private void calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+        double theta = lon1 - lon2;
+        double dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(deg2rad(theta));
+        dist = Math.acos(dist);
+        dist = rad2deg(dist);
+        dist = dist * 60 * 1.1515;
+//        Toast.makeText(getApplicationContext(), "distance : " + dist,
+//                Toast.LENGTH_LONG).show();
+
+        // return (dist);
+//        if (shortestDistance == null){
+//            shortestDistance = dist;
+//        }else{
+//            if(dist < shortestDistance){
+//
+//            }
+//        }
+
+    }
+
+    private double deg2rad(double deg) {
+        return (deg * Math.PI / 180.0);
+    }
+
+    private double rad2deg(double rad) {
+        return (rad * 180.0 / Math.PI);
+    }
+
+
+    private void drawSortestPath(double destinationLat, double destinationLng) {
+
+    }
+
+    ;
 
     private void initializeDrawerHeader() {
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nvView);
-        View headerLayout = navigationView.inflateHeaderView(R.layout.nav_header);
-
-        TextView userName = (TextView) headerLayout.findViewById(R.id.tvUserName);
+        TextView userName = (TextView) findViewById(R.id.tvUserName);
         userName.setText(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("userName", "Oops, User name not found ! "));
-
-        ImageView profilePicture = (ImageView) headerLayout.findViewById(R.id.ivProfilePicture);
+        ImageView profilePicture = (ImageView) findViewById(R.id.ivProfilePicture);
         Picasso.with(this)
                 .load(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getString("profilePictureURL", ""))
                 .placeholder(R.drawable.test1)
                 .error(R.drawable.test1)
                 .into(profilePicture);
-    };
+    }
+
+    ;
 
 
     private void initializeDrawerList() {
@@ -181,6 +231,46 @@ public class Home extends FragmentActivity {
         DrawerListAdapter adapter = new DrawerListAdapter(this,
                 R.layout.drawer_list_item, listData);
         listCategories.setAdapter(adapter);
+    }
+
+    ;
+
+
+    private boolean isGpsEnabled() {
+        LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        boolean gps_enabled = false;
+        boolean network_enabled = false;
+
+        try {
+            gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        } catch (Exception ex) {
+        }
+
+        try {
+            network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } catch (Exception ex) {
+        }
+
+        if (!gps_enabled && !network_enabled) {
+            Toast.makeText(getApplicationContext(), "Please enable your location service", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        return true;
+    }
+
+    ;
+
+    private boolean isNetworkEnabled() {
+
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
+            return true;
+        } else {
+            Toast.makeText(getApplicationContext(), "Please enable network connection", Toast.LENGTH_LONG).show();
+            return false;
+        }
     };
 
     @Override
@@ -202,11 +292,13 @@ public class Home extends FragmentActivity {
                 Place place = PlacePicker.getPlace(data, this);
             }
         }
-    };
+    }
+
+    ;
 
 
     // `onPostCreate` called when activity start-up is complete after `onStart()`
-    // NOTE! Make sure to override the method with only a single `Bundle` argument
+// NOTE! Make sure to override the method with only a single `Bundle` argument
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
