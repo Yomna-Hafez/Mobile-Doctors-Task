@@ -24,6 +24,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -43,11 +47,22 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+
 
 /**
  * Created by yomna on 3/3/16.
  */
-public class Home extends FragmentActivity {
+public class Home extends FragmentActivity implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+    private LocationRequest mLocationRequest;
+    private GoogleApiClient mGoogleApiClient;
     private DrawerLayout drawerLayout;
     private ListView listCategories;
     int PLACE_PICKER_REQUEST = 1;
@@ -55,6 +70,7 @@ public class Home extends FragmentActivity {
     Double shortestDistance;
     double currentLat, currentLng;
     GoogleMap map;
+    Location mCurrentLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +81,8 @@ public class Home extends FragmentActivity {
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         listCategories = (ListView) findViewById(R.id.listCategories);
 
-        initializeMap();
+        buildGoogleApiClient();
+      //  initializeMap();
         initializeDrawerHeader();
         initializeDrawerList();
         isGpsEnabled();
@@ -85,37 +102,40 @@ public class Home extends FragmentActivity {
     private void initializeMap() {
 
         map.setMyLocationEnabled(true);
-        GoogleMap.OnMyLocationChangeListener myLocationChangeListener = new GoogleMap.OnMyLocationChangeListener() {
-            @Override
-            public void onMyLocationChange(Location location) {
-                LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
-                currentLat = location.getLatitude();
-                currentLng = location.getLongitude();
-                currentLocation = location.getLatitude() + "," + location.getLongitude();
-                map.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 16.0f));
-                map.addMarker(new MarkerOptions()
-                        .position(loc)
-                        .title("Hello Mobile Doctors!"));
+        if (mCurrentLocation != null) {
+            LatLng loc = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 16.0f));
+            currentLat = mCurrentLocation.getLatitude();
+            currentLng = mCurrentLocation.getLongitude();
+            currentLocation = mCurrentLocation.getLatitude() + "," + mCurrentLocation.getLongitude();
+            map.addMarker(new MarkerOptions()
+                    .position(loc)
+                    .title("Hello Mobile Doctors!"));
+        }
+//        GoogleMap.OnMyLocationChangeListener myLocationChangeListener = new GoogleMap.OnMyLocationChangeListener() {
+//            @Override
+//            public void onMyLocationChange(Location location) {
+//                LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
+//                currentLat = location.getLatitude();
+//                currentLng = location.getLongitude();
+//                currentLocation = location.getLatitude() + "," + location.getLongitude();
+//                map.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 16.0f));
+//                map.addMarker(new MarkerOptions()
+//                        .position(loc)
+//                        .title("Hello Mobile Doctors!"));
+//
+//            }
+//        };
+//        map.setOnMyLocationChangeListener(myLocationChangeListener);
 
-            }
-        };
-        map.setOnMyLocationChangeListener(myLocationChangeListener);
+    };
 
-//        PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
-//        try {
-//            startActivityForResult(builder.build(getApplicationContext()), PLACE_PICKER_REQUEST);
-//        } catch (GooglePlayServicesRepairableException e) {
-//            e.printStackTrace();
-//        } catch (GooglePlayServicesNotAvailableException e) {
-//            e.printStackTrace();
-//        }
-    }
-
-    ;
 
     private void getNearbyPlaces(String category) {
         if (isNetworkEnabled()) {
             String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + currentLocation + "&radius=500&type=" + category + "&key=AIzaSyCfJDlN8lXcLCh8H0f8G62ZQM0Qj9N0e9Y";
+//            Toast.makeText(getApplicationContext(), "url : " + url,
+//                Toast.LENGTH_LONG).show();
             Ion.with(getApplicationContext())
                     .load(url)
                     .asJsonObject()
@@ -184,17 +204,17 @@ public class Home extends FragmentActivity {
 //            }
 //        }
 
-        Location locationA = new Location("point A");
+        Location source = new Location("Source");
+        source.setLatitude(lat1);
+        source.setLongitude(lon1);
+        Location destination = new Location("Destination");
+        destination.setLatitude(lat2);
+        destination.setLongitude(lon2);
+        float distance = source.distanceTo(destination);
 
-        locationA.setLatitude(lat1);
-        locationA.setLongitude(lon1);
-
-        Location locationB = new Location("point B");
-
-        locationB.setLatitude(lat2);
-        locationB.setLongitude(lon2);
-
-        float distance = locationA.distanceTo(locationB);
+//        Location currentLocation = new Location(String.valueOf(new LatLng(lat1,lon1)));
+//        Location nextLocation = new Location(String.valueOf(new LatLng(lat1,lon1)));
+//        float distanceInMeters = currentLocation.distanceTo(nextLocation);
     }
 
     private double deg2rad(double deg) {
@@ -206,7 +226,7 @@ public class Home extends FragmentActivity {
     }
 
 
-    private void drawSortestPath(double destinationLat, double destinationLng) {
+    private void drawShortestPath(double destinationLat, double destinationLng) {
 
     }
 
@@ -282,7 +302,9 @@ public class Home extends FragmentActivity {
             Toast.makeText(getApplicationContext(), "Please enable network connection", Toast.LENGTH_LONG).show();
             return false;
         }
-    };
+    }
+
+    ;
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -308,10 +330,68 @@ public class Home extends FragmentActivity {
     ;
 
 
-    // `onPostCreate` called when activity start-up is complete after `onStart()`
-// NOTE! Make sure to override the method with only a single `Bundle` argument
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        mLocationRequest = LocationRequest.create();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(10000); // Update location every second
+
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+
+
+        mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        if (mCurrentLocation != null) {
+
+            Toast.makeText(getApplicationContext(), "onConnected : " + mCurrentLocation,
+                    Toast.LENGTH_LONG).show();
+        }
+        initializeMap();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mCurrentLocation = location;
+//        Toast.makeText(getApplicationContext(), "current location : " + mCurrentLocation,
+//                Toast.LENGTH_LONG).show();
+        initializeMap();
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        buildGoogleApiClient();
+    }
+
+    synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+
+
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
+        }
     }
 }
