@@ -18,6 +18,8 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
+import com.facebook.Profile;
+import com.facebook.ProfileTracker;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
@@ -53,9 +55,34 @@ public class MainActivity extends Activity {
 
 
             loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+                private ProfileTracker mProfileTracker;
+
                 @Override
                 public void onSuccess(LoginResult loginResult) {
-                    getUserData(loginResult);
+                    Profile profile = Profile.getCurrentProfile();
+//                    profile.getName() - profile.getProfilePictureUri(400, 400).toString()
+                    info.setText((CharSequence) profile.getProfilePictureUri(400, 400).toString());
+                    String profilePictureURL = "https://graph.facebook.com/" + loginResult.getAccessToken().getUserId() + "/picture?type=large";
+                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("userName", profile.getName()).commit();
+                    PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("profilePictureURL", profile.getProfilePictureUri(400, 400).toString()).commit();
+
+
+//                    if (Profile.getCurrentProfile() == null) {
+//                        mProfileTracker = new ProfileTracker() {
+//                            @Override
+//                            protected void onCurrentProfileChanged(Profile profile, Profile profile2) {
+//                                // profile2 is the new profile
+//                                Log.v("facebook - profile", profile2.getFirstName());
+//                                mProfileTracker.stopTracking();
+//                            }
+//                        };
+//                        mProfileTracker.startTracking();
+//                    } else {
+//                        Profile profile = Profile.getCurrentProfile();
+//                    }
+                    Intent openHome = new Intent(MainActivity.this, Home.class);
+                    startActivity(openHome);
+                    finish();
                 }
 
                 @Override
@@ -81,44 +108,49 @@ public class MainActivity extends Activity {
             }
         }
         return false;
-    };
+    }
+
+    ;
 
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         callbackManager.onActivityResult(requestCode, resultCode, data);
+        if (callbackManager.onActivityResult(requestCode, resultCode, data)) {
+            return;
+        }
     }
 
 
-    protected void getUserData(LoginResult loginResult) {
-        final String profilePictureURL = "https://graph.facebook.com/" + loginResult.getAccessToken().getUserId() + "/picture?type=large";
-        GraphRequest request = GraphRequest.newMeRequest(
-                loginResult.getAccessToken(),
-                new GraphRequest.GraphJSONObjectCallback() {
-                    @Override
-                    public void onCompleted(
-                            JSONObject object,
-                            GraphResponse response) {
-                        Log.v("LoginActivity", response.toString());
-                        try {
-                            String userName = response.getJSONObject().get("name").toString();
-                            PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("userName", userName).commit();
-                            PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("profilePictureURL", profilePictureURL).commit();
-                            Intent openHome = new Intent(MainActivity.this, Home.class);
-                            startActivity(openHome);
-                            finish();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-        Bundle parameters = new Bundle();
-        parameters.putString("fields", "id,name,email");
-        request.setParameters(parameters);
-        request.executeAsync();
-    }
-
-    ;
+//    protected void getUserData(LoginResult loginResult) {
+//
+//        GraphRequest request = GraphRequest.newMeRequest(
+//                loginResult.getAccessToken(),
+//                new GraphRequest.GraphJSONObjectCallback() {
+//                    @Override
+//                    public void onCompleted(
+//                            JSONObject object,
+//                            GraphResponse response) {
+//                        Log.v("LoginActivity", response.toString());
+//                        try {
+//                            String userName = response.getJSONObject().get("name").toString();
+//                            PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("userName", userName).commit();
+//                            PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putString("profilePictureURL", profilePictureURL).commit();
+////                            Intent openHome = new Intent(MainActivity.this, Home.class);
+////                            startActivity(openHome);
+////                            finish();
+//                        } catch (JSONException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                });
+//        Bundle parameters = new Bundle();
+//        parameters.putString("fields", "id,name,email");
+//        request.setParameters(parameters);
+//        request.executeAsync();
+//    }
+//
+//    ;
 
 
     @Override

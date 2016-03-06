@@ -11,6 +11,7 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -26,9 +27,11 @@ dependencies {
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.android.support:design:23.1.1'
     compile 'com.android.support:recyclerview-v7:21.0.+'
-    compile 'com.google.android.gms:play-services-maps:7.8.0'
-    compile 'com.google.android.gms:play-services-location:7.8.0'
+    compile 'com.google.android.gms:play-services-maps:8.1.0'
+    compile 'com.google.android.gms:play-services-location:8.1.0'
     compile 'de.hdodenhof:circleimageview:2.0.0'
     compile 'com.squareup.okhttp3:okhttp:3.1.2'
     compile 'com.koushikdutta.ion:ion:2.+'
+    compile 'com.google.android.gms:play-services:8.1.0'
 }
+apply plugin: 'com.google.gms.google-services'

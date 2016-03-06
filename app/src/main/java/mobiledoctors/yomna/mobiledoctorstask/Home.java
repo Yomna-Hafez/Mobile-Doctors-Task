@@ -61,7 +61,6 @@ import com.google.android.gms.location.LocationServices;
 import java.io.IOException;
 import java.net.URL;
 
-
 /**
  * Created by yomna on 3/3/16.
  */
