@@ -87,7 +87,8 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
         listCategories = (ListView) findViewById(R.id.listCategories);
 
 
-        new LoadMap().execute();
+        if (isGpsEnabled())
+            new LoadMap().execute();
         initializeDrawerHeader();
         initializeDrawerList();
 
@@ -100,6 +101,8 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
                 getNearbyPlaces(choosenCategory);
             }
         });
+
+        // TODO need to enhance - added to notify map when gps is enabled
 
     }
 
@@ -119,7 +122,9 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
                     .position(loc)
                     .title("Hello Mobile Doctors!"));
         }
-    };
+    }
+
+    ;
 
 
     private void getNearbyPlaces(String category) {
@@ -157,7 +162,9 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
                         }
                     });
         }
-    };
+    }
+
+    ;
 
 
     private void drawNearbyPlaces(double destinationLat, double destinationLng, String placeName) {
@@ -168,7 +175,9 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
 
         // todo call find shortest route - bonus
         // calculateDistance(currentLat, currentLng, destinationLat, destinationLng );
-    };
+    }
+
+    ;
 
 
     private void calculateDistance(double lat1, double lon1, double lat2, double lon2) {
@@ -184,7 +193,9 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
 //        Location currentLocation = new Location(String.valueOf(new LatLng(lat1,lon1)));
 //        Location nextLocation = new Location(String.valueOf(new LatLng(lat1,lon1)));
 //        float distanceInMeters = currentLocation.distanceTo(nextLocation);
-    };
+    }
+
+    ;
 
 
     private void initializeDrawerHeader() {
@@ -198,7 +209,9 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
                 .placeholder(R.drawable.test1)
                 .error(R.drawable.test1)
                 .into(profilePicture);
-    };
+    }
+
+    ;
 
 
     private void initializeDrawerList() {
@@ -215,7 +228,9 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
         DrawerListAdapter adapter = new DrawerListAdapter(this,
                 R.layout.drawer_list_item, listData);
         listCategories.setAdapter(adapter);
-    };
+    }
+
+    ;
 
 
     private boolean isGpsEnabled() {
@@ -238,7 +253,9 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
             return false;
         }
         return true;
-    };
+    }
+
+    ;
 
 
     private boolean isNetworkEnabled() {
@@ -294,7 +311,6 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
 
 
     synchronized void buildGoogleApiClient() {
-        isGpsEnabled();
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -308,15 +324,20 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
     @Override
     protected void onStart() {
         super.onStart();
-        mGoogleApiClient.connect();
+        if (isGpsEnabled())
+            mGoogleApiClient.connect();
     }
 
 
     @Override
     protected void onStop() {
         super.onStop();
-        if (mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.disconnect();
+        if (isGpsEnabled()) {
+            if (mGoogleApiClient != null) {
+                if (mGoogleApiClient.isConnected()) {
+                    mGoogleApiClient.disconnect();
+                }
+            }
         }
     }
 
