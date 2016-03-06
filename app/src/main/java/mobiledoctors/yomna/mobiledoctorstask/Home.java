@@ -4,10 +4,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
@@ -56,6 +58,9 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import java.io.IOException;
+import java.net.URL;
+
 
 /**
  * Created by yomna on 3/3/16.
@@ -70,6 +75,7 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
     Double shortestDistance;
     double currentLat, currentLng;
     GoogleMap map;
+    Marker marker;
     Location mCurrentLocation;
 
     @Override
@@ -81,11 +87,10 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         listCategories = (ListView) findViewById(R.id.listCategories);
 
-        buildGoogleApiClient();
-      //  initializeMap();
+
+        new LoadMap().execute();
         initializeDrawerHeader();
         initializeDrawerList();
-        isGpsEnabled();
 
         listCategories.setOnItemClickListener(new OnItemClickListener() {
             @Override
@@ -99,6 +104,7 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
 
     }
 
+
     private void initializeMap() {
 
         map.setMyLocationEnabled(true);
@@ -108,34 +114,18 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
             currentLat = mCurrentLocation.getLatitude();
             currentLng = mCurrentLocation.getLongitude();
             currentLocation = mCurrentLocation.getLatitude() + "," + mCurrentLocation.getLongitude();
-            map.addMarker(new MarkerOptions()
+            if (marker != null)
+                marker.remove();
+            marker = map.addMarker(new MarkerOptions()
                     .position(loc)
                     .title("Hello Mobile Doctors!"));
         }
-//        GoogleMap.OnMyLocationChangeListener myLocationChangeListener = new GoogleMap.OnMyLocationChangeListener() {
-//            @Override
-//            public void onMyLocationChange(Location location) {
-//                LatLng loc = new LatLng(location.getLatitude(), location.getLongitude());
-//                currentLat = location.getLatitude();
-//                currentLng = location.getLongitude();
-//                currentLocation = location.getLatitude() + "," + location.getLongitude();
-//                map.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 16.0f));
-//                map.addMarker(new MarkerOptions()
-//                        .position(loc)
-//                        .title("Hello Mobile Doctors!"));
-//
-//            }
-//        };
-//        map.setOnMyLocationChangeListener(myLocationChangeListener);
-
     };
 
 
     private void getNearbyPlaces(String category) {
         if (isNetworkEnabled()) {
             String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + currentLocation + "&radius=500&type=" + category + "&key=AIzaSyCfJDlN8lXcLCh8H0f8G62ZQM0Qj9N0e9Y";
-//            Toast.makeText(getApplicationContext(), "url : " + url,
-//                Toast.LENGTH_LONG).show();
             Ion.with(getApplicationContext())
                     .load(url)
                     .asJsonObject()
@@ -168,9 +158,7 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
                         }
                     });
         }
-    }
-
-    ;
+    };
 
 
     private void drawNearbyPlaces(double destinationLat, double destinationLng, String placeName) {
@@ -181,28 +169,10 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
 
         // todo call find shortest route - bonus
         // calculateDistance(currentLat, currentLng, destinationLat, destinationLng );
-    }
-
-    ;
+    };
 
 
     private void calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-        double theta = lon1 - lon2;
-        double dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(deg2rad(theta));
-        dist = Math.acos(dist);
-        dist = rad2deg(dist);
-        dist = dist * 60 * 1.1515;
-//        Toast.makeText(getApplicationContext(), "distance : " + dist,
-//                Toast.LENGTH_LONG).show();
-
-        // return (dist);
-//        if (shortestDistance == null){
-//            shortestDistance = dist;
-//        }else{
-//            if(dist < shortestDistance){
-//
-//            }
-//        }
 
         Location source = new Location("Source");
         source.setLatitude(lat1);
@@ -215,22 +185,8 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
 //        Location currentLocation = new Location(String.valueOf(new LatLng(lat1,lon1)));
 //        Location nextLocation = new Location(String.valueOf(new LatLng(lat1,lon1)));
 //        float distanceInMeters = currentLocation.distanceTo(nextLocation);
-    }
+    };
 
-    private double deg2rad(double deg) {
-        return (deg * Math.PI / 180.0);
-    }
-
-    private double rad2deg(double rad) {
-        return (rad * 180.0 / Math.PI);
-    }
-
-
-    private void drawShortestPath(double destinationLat, double destinationLng) {
-
-    }
-
-    ;
 
     private void initializeDrawerHeader() {
 
@@ -243,9 +199,7 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
                 .placeholder(R.drawable.test1)
                 .error(R.drawable.test1)
                 .into(profilePicture);
-    }
-
-    ;
+    };
 
 
     private void initializeDrawerList() {
@@ -262,9 +216,7 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
         DrawerListAdapter adapter = new DrawerListAdapter(this,
                 R.layout.drawer_list_item, listData);
         listCategories.setAdapter(adapter);
-    }
-
-    ;
+    };
 
 
     private boolean isGpsEnabled() {
@@ -287,9 +239,8 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
             return false;
         }
         return true;
-    }
+    };
 
-    ;
 
     private boolean isNetworkEnabled() {
 
@@ -304,75 +255,47 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
         }
     }
 
-    ;
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // The action bar home/up action should open or close the drawer.
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                drawerLayout.openDrawer(GravityCompat.START);
-                return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == PLACE_PICKER_REQUEST) {
-            if (resultCode == RESULT_OK) {
-                Place place = PlacePicker.getPlace(data, this);
-            }
-        }
-    }
-
-    ;
-
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
     }
 
+
     @Override
     public void onConnected(Bundle bundle) {
+
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(10000); // Update location every second
-
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-
-
         mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(
                 mGoogleApiClient);
-        if (mCurrentLocation != null) {
-
-            Toast.makeText(getApplicationContext(), "onConnected : " + mCurrentLocation,
-                    Toast.LENGTH_LONG).show();
-        }
         initializeMap();
     }
+
 
     @Override
     public void onConnectionSuspended(int i) {
 
     }
 
+
     @Override
     public void onLocationChanged(Location location) {
         mCurrentLocation = location;
-//        Toast.makeText(getApplicationContext(), "current location : " + mCurrentLocation,
-//                Toast.LENGTH_LONG).show();
         initializeMap();
     }
+
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         buildGoogleApiClient();
     }
 
+
     synchronized void buildGoogleApiClient() {
+        isGpsEnabled();
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -381,17 +304,35 @@ public class Home extends FragmentActivity implements LocationListener, GoogleAp
 
 
     }
+
+
     @Override
     protected void onStart() {
         super.onStart();
         mGoogleApiClient.connect();
     }
 
+
     @Override
     protected void onStop() {
         super.onStop();
         if (mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
+        }
+    }
+
+
+    private class LoadMap extends AsyncTask<Void, Void, Location> {
+
+        @Override
+        protected Location doInBackground(Void... arg0) {
+            buildGoogleApiClient();
+            return mCurrentLocation;
+        }
+
+        @Override
+        protected void onPostExecute(Location loc) {
+            initializeMap();
         }
     }
 }
